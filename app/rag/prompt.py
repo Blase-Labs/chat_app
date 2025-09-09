@@ -1,21 +1,23 @@
-from typing import List
 import os
 import re
 
 from langchain.docstore.document import Document
 
-def _clean(text:str) -> str:
+
+def _clean(text: str) -> str:
     text = re.sub(r"\s+", " ", text).strip()
     text = text.replace(" ; ", "; ").replace(" , ", ", ")
     return text
 
+
 def build_prompt(
     question: str,
-    docs: List[Document],
+    docs: list[Document],
     *,
     per_doc_chars: int | None = None,
-    max_ctx_chars: int | None = None
- ) -> str:
+    max_ctx_chars: int | None = None,
+) -> str:
+    """Assemble a compact, cited prompt from the question and retrieved docs."""
     per_doc_chars = per_doc_chars or int(os.getenv("PER_DOC_CHARS", "600"))
     max_ctx_chars = max_ctx_chars or int(os.getenv("MAX_CTX_CHARS", "2400"))
 
@@ -39,7 +41,7 @@ def build_prompt(
             f"Question: {question}\n\n"
             "Return a concise answer. If unknown, reply: 'Insufficient context.'"
         )
-    
+
     system_rules = (
         "You are a precise data assistant. Answer ONLY using the provided context.\n"
         "If the context is insufficient, say 'Insufficient context.' Do not invent values.\n"
@@ -53,10 +55,5 @@ def build_prompt(
         "2) Sources: comma-separated row numbers, e.g., 'Sources: row 3, row 9'\n"
     )
 
-    prompt = (
-        f"{system_rules}\n\n"
-        f"Question: {question}\n\n"
-        f"Context:\n{context}\n\n"
-        f"{answer_format}"
-    )
+    prompt = f"{system_rules}\n\nQuestion: {question}\n\nContext:\n{context}\n\n{answer_format}"
     return prompt

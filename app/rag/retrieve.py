@@ -1,12 +1,14 @@
-from typing import List, Tuple
-from langchain_community.vectorstores import FAISS
-from langchain.docstore.document import Document
 import os
 
-def retriever(vs: FAISS, question: str, k: int = 6) -> Tuple[List[Document], List[int]]: 
+from langchain.docstore.document import Document
+from langchain_community.vectorstores import FAISS
+
+
+def retriever(vs: FAISS, question: str, k: int = 6) -> tuple[list[Document], list[int]]:
+    """Return top-k relevant documents and their row IDs from the FAISS index."""
     if not question or not question.strip():
         return [], []
-    
+
     mode = os.getenv("RETRIEVAL_MODE", "mmr").lower()
     if mode == "mmr":
         fetch_k = int(os.getenv("FETCH_K", "24"))
@@ -18,7 +20,7 @@ def retriever(vs: FAISS, question: str, k: int = 6) -> Tuple[List[Document], Lis
         docs = vs.similarity_search(question, k=k)
 
     seen = set()
-    pruned: List[Document] = []
+    pruned: list[Document] = []
     for d in docs:
         row = d.metadata.get("row")
         if row in seen:

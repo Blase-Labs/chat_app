@@ -3,9 +3,9 @@
 # streamlit
 
 import os
-import streamlit as st
-import json
+
 import requests
+import streamlit as st
 
 API_BASE = os.getenv("API_BASE_URL", "http://localhost:8000")
 
@@ -19,8 +19,10 @@ st.title("Load your dataset and ask questions.")
 
 uploaded = st.file_uploader("Choose a CSV", type=["csv"])
 
+
 def sig(file):
     return f"{file.name}:{file.size if hasattr(file, 'size') else len(file.getvalue())}"
+
 
 if uploaded:
     cur_sig = sig(uploaded)
@@ -35,7 +37,7 @@ if uploaded:
                 r = requests.post(
                     f"{API_BASE}/ingest",
                     files={"csv": (uploaded.name, uploaded.getvalue(), "text/csv")},
-                    timeout=120
+                    timeout=120,
                 )
                 if r.ok:
                     st.session_state.indexed = True

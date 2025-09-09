@@ -2,17 +2,19 @@
 
 # FastAPI backend entrypoint
 
-from fastapi import FastAPI, UploadFile, File, HTTPException
-from pydantic import BaseModel
 from contextlib import asynccontextmanager
+
 import pandas as pd
+from fastapi import FastAPI, File, HTTPException, UploadFile
+from pydantic import BaseModel
 
 from .rag.ingest_data import load_index_if_exists, vectorize_data
-from .rag.retrieve import retriever
 from .rag.prompt import build_prompt
 from .rag.respond import respond
+from .rag.retrieve import retriever
 
 index = {}
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -20,17 +22,21 @@ async def lifespan(app: FastAPI):
     yield
     app.state.vs = None
 
+
 app = FastAPI(lifespan=lifespan)
+
 
 class AskRequest(BaseModel):
     question: str
+
 
 @app.get("/healthz")
 async def healthz():
     return {"ok": True}
 
+
 @app.post("/ingest")
-async def ingest(csv: UploadFile = File(...)):
+async def ingest(csv: UploadFile = File(...)):  # noqa: B008
     if not csv.filename.lower().endswith(".csv"):
         raise HTTPException(400, "Upload a CSV")
     df = pd.read_csv(csv.file)
@@ -39,6 +45,7 @@ async def ingest(csv: UploadFile = File(...)):
     vs, rows = vectorize_data(df, source_name=csv.filename)
     app.state.vs = vs
     return {"rows": rows, "indexed": True}
+
 
 @app.post("/ask")
 async def ask(req: AskRequest):
